@@ -81,6 +81,8 @@ def _browse(stdscr, mode, ext_filter=None, title=None):
         elif key == ord(" ") and mode == "folder":
             stdscr.clear()
             stdscr.refresh()
+            if entries and entries[selected]["is_dir"] and entries[selected]["name"] != ".. (dossier parent)":
+                return entries[selected]["path"]
             return current
 
         elif key == 27:  # ESC
