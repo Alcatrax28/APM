@@ -120,11 +120,26 @@ def main(stdscr):
 
 
 if __name__ == "__main__":
-    import sys, os
+    import sys, os, shutil, subprocess
+
     if not sys.stdin.isatty():
-        print("Erreur : APM doit être lancé dans un terminal interactif.")
-        print("Ouvrez un terminal et exécutez :")
-        print(f"  cd \"{os.path.dirname(os.path.abspath(__file__))}\"")
-        print("  source venv/bin/activate && python main.py")
+        # Pas dans un terminal : se relancer dans le premier émulateur disponible
+        binary = os.path.abspath(sys.argv[0])
+        for term, args in [
+            ("konsole", ["konsole", "--hold", "-e", binary]),
+            ("xterm",   ["xterm", "-hold", "-e", binary]),
+            ("xfce4-terminal", ["xfce4-terminal", "--hold", "-x", binary]),
+            ("gnome-terminal", ["gnome-terminal", "--", binary]),
+        ]:
+            if shutil.which(term):
+                subprocess.Popen(args)
+                sys.exit(0)
+        # Aucun terminal trouvé : message d'erreur via zenity ou stderr
+        if shutil.which("zenity"):
+            subprocess.run(["zenity", "--error", "--text",
+                            "APM nécessite un terminal.\nInstallez konsole ou xterm."])
+        else:
+            sys.stderr.write("APM doit être lancé dans un terminal interactif.\n")
         sys.exit(1)
+
     curses.wrapper(main)
